@@ -37,6 +37,6 @@ And the structure of the file is simply the name of the language (eg: catalan) a
 As you might notice, some of the steps are slow. These are mainly finding the synsets corresponding to each word and computing distance between those. To solve this, the use of memoization techniques, such as precomputing the values and saving them on sets or any other fast-accessing data structure are good solutions, however the idea of this repo was offering the basic features.
 
 Also, some overhead seems to happen when we launch the program. It seems to be a problem related to FreeLing, however I have still not found a solution for it, so suggestions are welcome.
-## Autor ✒️
+## Author ✒️
 
 * **Jose Francisco Domenech Gomis** ([dogo3](https://github.com/dogo3))
