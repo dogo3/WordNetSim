@@ -8,11 +8,11 @@ import re
 
 class Lemmatizer:
 
-    stop_words = set(stopwords.words('catalan'))
+    stop_words = set(stopwords.words('english'))
 
     def __init__(self,
                 DATA="/usr/local/share/freeling/",
-                LANG="ca"):
+                LANG="en"):
         self.DATA = DATA
         pyfreeling.util_init_locale("default")
         self.LANG=LANG
@@ -124,7 +124,7 @@ def similarity_score(s1, s2, stat = "max"):
 def symetric_similarity_score(s1, s2, stat = "max"):
     return (similarity_score(s1, s2,stat) + similarity_score(s2, s1,stat)) / 2
 
-def toks_to_synsets(toks, pos = None, lang = "cat"):
+def toks_to_synsets(toks, pos = None, lang = "eng"):
     """
     Returns a list of synsets in a list of tokens.
 
@@ -173,7 +173,7 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
         return sims
 
 
-def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang="cat",stat="max") -> float:
+def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang="eng",stat="max") -> float:
     toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang)
     toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang)
     return symetric_similarity_score(toks1,toks2,stat=stat)
@@ -181,7 +181,5 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang="cat",stat=
 
 # def sim_tokset_str():
 
-if __name__ == '__main__':
-    print(sim_str_str("El meu nom és Pepe i estic provant aquesta aplicació per a ordinador al meu portàtil connectat a internet","El meu fill ha estudiat enginyeria informàtica amb l'especialitat d'arquitectura de computadors.",stat="max"))
-    print(sim_str_str("El meu nom és Pepe i estic provant aquesta aplicació per a ordinador al meu portàtil connectat a internet","El meu fill ha estudiat mecànica de vehícles automòbils.",stat="max"))
-    print(sim_str_str("El meu nom és Pepe i estic provant aquesta aplicació per a ordinador al meu portàtil connectat a internet","El meu fill ha estudiat contabilitat i està fent les pràctiques a un banc.",stat="max"))
+# if __name__ == '__main__':
+#     print(sim_str_str("I am testing this new application on my laptop connected to the Internet.","My son studied computer science and he's working at Google",stat="max"))
