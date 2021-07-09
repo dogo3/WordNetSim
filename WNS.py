@@ -4,15 +4,18 @@ from nltk.corpus import stopwords
 import numpy as np
 import pyfreeling
 import re
+import fasttext
 
 
 class Lemmatizer:
 
-    stop_words = set(stopwords.words('english'))
+    
 
     def __init__(self,
                 DATA="/usr/local/share/freeling/",
-                LANG="en"):
+                LANG="en",
+                LANG_STOPWORDS="english"):
+        self.stop_words = set(stopwords.words(LANG_STOPWORDS))
         self.DATA = DATA
         pyfreeling.util_init_locale("default")
         self.LANG=LANG
@@ -59,6 +62,22 @@ class Lemmatizer:
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
+def ISO_6391_to_6392(code: str) -> str:
+    """
+    Converts ISO 639-1 (2 letters) language codes to ISO 639-2 (3 letters)
+    """
+    if code == "da":
+        return "dan"
+    elif code == "en":
+        return "eng"
+    elif code == "es":
+        return "spa"
+    elif code == "it":
+        return "ita"
+    elif code == "mo":
+        return "mon"
+    else:
+        raise ValueError("ISO 639-1 code not known")
 
 def meanList(l:list) -> float:
     if len(l)==0:
@@ -162,7 +181,6 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
         synsetsLists2 = self.tokLists_to_synsets(tokLists2)
                 # 2nd function u need to create
 
-
         with alive_bar(len(synsetsLists1)*len(synsetsLists2),force_tty=1) as bar:
             sims = np.full(fill_value=-1.0,shape=(len(tokLists1),len(tokLists2)))
             for s1 in range(len(synsetsLists1)):
@@ -173,13 +191,25 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
         return sims
 
 
-def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang="eng",stat="max") -> float:
-    toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang)
-    toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang)
+def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+    toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
+    toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
     return symetric_similarity_score(toks1,toks2,stat=stat)
+
+modelFasttext = fasttext.load_model('./lid.176.ftz')
+
+def sim_str_str_multiling(txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
+    #We find out the language of the texts
+    lang1 = modelFasttext.predict(txt1, k=1)[0][0][-2:] #We take the ISO code of the languages
+    lang2 = modelFasttext.predict(txt2, k=1)[0][0][-2:]
+    print(lang1)
+    print(lang2)
+    return sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
 
 
 # def sim_tokset_str():
 
-# if __name__ == '__main__':
-#     print(sim_str_str("I am testing this new application on my laptop connected to the Internet.","My son studied computer science and he's working at Google",stat="max"))
+if __name__ == '__main__':
+    # print(sim_str_str("I am testing this new application on my laptop connected to the Internet.","My son studied computer science and he's working at Google",stat="max"))
+    # print(sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.","My son studied computer science and he's working at Google",stat="max"))
+    # print(sim_str_str_multiling("Mi padre irá a comprar jamón y queso a la tienda de la esquina.","My son studied computer science and he's working at Google",stat="max"))
