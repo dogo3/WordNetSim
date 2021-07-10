@@ -18,6 +18,9 @@ Main dependencies for this module to work are Freeling and NLTK.
 
 To use Freeling **API for Python** (instead of native C++) we need to compile it from source as stated in their [**documentation**](https://freeling-user-manual.readthedocs.io/en/v4.2/toc/). I deeply encourage the reader to follow the installation steps described there since it is not a trivial process.
 
+### FastText Dependencies
+Don't forget to **uncompress** the [language identification model](lid.176.bin).
+
 ### NLTK Dependencies
 
 In some versions of NLTK the WordNet corpus might not be pre-installed, so you would need to install it, if not installed the program should crash as soon as the first line:
