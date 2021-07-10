@@ -67,155 +67,154 @@ def meanList(l:list) -> float:
         return 0
     return sum(l)/len(l)
 
-class WordNetSimilarity:
 
-    langs_iso_6291 = set(["ca","da","en","es","it","mn"])
+langs_iso_6291 = set(["ca","da","en","es","it","mn"])
+
+modelFasttext = fasttext.load_model('./lid.176.bin')
+
+
+def ISO_6391_to_6392(code: str) -> str:
+    """
+    Converts ISO 639-1 (2 letters) language codes to ISO 639-2 (3 letters)
+    """
+    if code == "ca":
+        return "cat"
+    if code == "da":
+        return "dan"
+    elif code == "en":
+        return "eng"
+    elif code == "es":
+        return "spa"
+    elif code == "it":
+        return "ita"
+    elif code == "mn":
+        return "mon"
+    else:
+        raise ValueError("ISO 639-1 code not known: "+str(code))
+
+
+
+
+def similarity_score(s1, s2, stat = "max"):
+    """
+    Calculate the normalized similarity score of s1 onto s2
+
+    For each synset in s1, finds the synset in s2 with the largest similarity value.
+    Sum of all of the largest similarity values and normalize this value by dividing it by the
+    number of largest similarity values found.
+
+    Args:
+        s1, s2: list of synsets from doc_to_synsets
+
+    Returns:
+        normalized similarity score of s1 onto s2
+
+    Example:
+        synsets1 = doc_to_synsets('I like cats')
+        synsets2 = doc_to_synsets('I like dogs')
+        similarity_score(synsets1, synsets2)
+        Out: 0.73333333333333339
+    """
     
-    modelFasttext = fasttext.load_model('./lid.176.bin')
+    if len(s1) == 0 or len(s2)==0 or s1==None or s2==None:
+        return 0
+    list1 = []
 
-    @classmethod
-    def ISO_6391_to_6392(self,code: str) -> str:
-        """
-        Converts ISO 639-1 (2 letters) language codes to ISO 639-2 (3 letters)
-        """
-        if code == "ca":
-            return "cat"
-        if code == "da":
-            return "dan"
-        elif code == "en":
-            return "eng"
-        elif code == "es":
-            return "spa"
-        elif code == "it":
-            return "ita"
-        elif code == "mn":
-            return "mon"
-        else:
-            raise ValueError("ISO 639-1 code not known: "+str(code))
+    count=0
+    # For each synset in s1
+    for a in s1:
+        list2 = []
+        for i in s2:
+            # finds the synset in s2 with the largest similarity value
+            score = i.path_similarity(a)
+            if score is not None:
+                list2.append(score)
+            else:
+                #If distance cannot be computed it is set to 0
+                list2.append(0)
+        list1.append(max(list2))
 
-    
+    if stat == "max":
+        output = max(list1)
+    elif stat == "mean":
+        output = meanList(list1)
+    elif stat == "q75":
+        output = np.quantile(np.array(list1),0.75)
+    elif stat == "q90":
+        output = np.quantile(np.array(list1),0.90)
+    else:
+        raise ValueError("Stat still not suported")
+    return output
 
-    @classmethod
-    def similarity_score(cls,s1, s2, stat = "max"):
-        """
-        Calculate the normalized similarity score of s1 onto s2
 
-        For each synset in s1, finds the synset in s2 with the largest similarity value.
-        Sum of all of the largest similarity values and normalize this value by dividing it by the
-        number of largest similarity values found.
+def symetric_similarity_score(s1, s2, stat = "max"):
+    return (similarity_score(s1, s2,stat) + similarity_score(s2, s1,stat)) / 2
 
-        Args:
-            s1, s2: list of synsets from doc_to_synsets
 
-        Returns:
-            normalized similarity score of s1 onto s2
+def toks_to_synsets(toks, pos = None, lang = "eng"):
+    """
+    Returns a list of synsets in a list of tokens.
 
-        Example:
-            synsets1 = doc_to_synsets('I like cats')
-            synsets2 = doc_to_synsets('I like dogs')
-            similarity_score(synsets1, synsets2)
-            Out: 0.73333333333333339
-        """
-        
-        if len(s1) == 0 or len(s2)==0 or s1==None or s2==None:
-            return 0
-        list1 = []
+    Tokenizes and tags the words in the document doc.
+    Then finds the first synset for each word/tag combination.
+    If a synset is not found for that combination it is skipped.
 
-        count=0
-        # For each synset in s1
-        for a in s1:
-            list2 = []
-            for i in s2:
-                # finds the synset in s2 with the largest similarity value
-                score = i.path_similarity(a)
-                if score is not None:
-                    list2.append(score)
-                else:
-                    #If distance cannot be computed it is set to 0
-                    list2.append(0)
-            list1.append(max(list2))
+    Args:
+        toks: List of tokens to be converted
+        pos: Whether to use PoS info or leave it as None
 
-        if stat == "max":
-            output = max(list1)
-        elif stat == "mean":
-            output = meanList(list1)
-        elif stat == "q75":
-            output = np.quantile(np.array(list1),0.75)
-        elif stat == "q90":
-            output = np.quantile(np.array(list1),0.90)
-        else:
-            raise ValueError("Stat still not suported")
-        return output
-    
-    @classmethod
-    def symetric_similarity_score(cls,s1, s2, stat = "max"):
-        return (cls.similarity_score(s1, s2,stat) + cls.similarity_score(s2, s1,stat)) / 2
+    Returns:
+        list of synsets
 
-    @classmethod
-    def toks_to_synsets(cls,toks, pos = None, lang = "eng"):
-        """
-        Returns a list of synsets in a list of tokens.
+    Example:
+        toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
+        Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
+    """
 
-        Tokenizes and tags the words in the document doc.
-        Then finds the first synset for each word/tag combination.
-        If a synset is not found for that combination it is skipped.
+    output = []
+    for i in toks:
+        syn = wn.synsets(i,pos=None,lang=lang)
+        if len(syn)>0:
+            synNames = []
+            for s in syn:
+                # s = s.name()
+                output.extend(syn)
+    return output
 
-        Args:
-            toks: List of tokens to be converted
-            pos: Whether to use PoS info or leave it as None
 
-        Returns:
-            list of synsets
+def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
+    """Finds the symmetrical similarity between two lists 
+    of lists of tokens (two lists of documents)"""
+            # first function u need to create
+    synsetsLists1 = self.tokLists_to_synsets(tokLists1)
+    synsetsLists2 = self.tokLists_to_synsets(tokLists2)
+            # 2nd function u need to create
 
-        Example:
-            toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
-            Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
-        """
+    with alive_bar(len(synsetsLists1)*len(synsetsLists2),force_tty=1) as bar:
+        sims = np.full(fill_value=-1.0,shape=(len(tokLists1),len(tokLists2)))
+        for s1 in range(len(synsetsLists1)):
+            for s2 in range(len(synsetsLists2)):
+                bar()
+                sims[s1,s2] = (self.similarity_score(synsetsLists1[s1], synsetsLists2[s2],stat) + self.similarity_score(synsetsLists2[s2], synsetsLists1[s1],stat)) / 2
 
-        output = []
-        for i in toks:
-            syn = wn.synsets(i,pos=None,lang=lang)
-            if len(syn)>0:
-                synNames = []
-                for s in syn:
-                    # s = s.name()
-                    output.extend(syn)
-        return output
+    return sims
 
-    @classmethod
-    def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
-        """Finds the symmetrical similarity between two lists 
-        of lists of tokens (two lists of documents)"""
-                # first function u need to create
-        synsetsLists1 = self.tokLists_to_synsets(tokLists1)
-        synsetsLists2 = self.tokLists_to_synsets(tokLists2)
-                # 2nd function u need to create
 
-        with alive_bar(len(synsetsLists1)*len(synsetsLists2),force_tty=1) as bar:
-            sims = np.full(fill_value=-1.0,shape=(len(tokLists1),len(tokLists2)))
-            for s1 in range(len(synsetsLists1)):
-                for s2 in range(len(synsetsLists2)):
-                    bar()
-                    sims[s1,s2] = (self.similarity_score(synsetsLists1[s1], synsetsLists2[s2],stat) + self.similarity_score(synsetsLists2[s2], synsetsLists1[s1],stat)) / 2
+def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+    toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
+    toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
+    return symetric_similarity_score(toks1,toks2,stat=stat)
 
-        return sims
 
-    @classmethod
-    def sim_str_str(cls,txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
-        toks1 = cls.toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
-        toks2 = cls.toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
-        return cls.symetric_similarity_score(toks1,toks2,stat=stat)
 
-    
 
-    @classmethod
-    def sim_str_str_multiling(cls,txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
-        #We find out the language of the texts
-        lang1 = cls.modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
-        lang1 = next(l[-2:] for l in lang1 if l[-2:] in cls.langs_iso_6291)
-        lang2 = cls.modelFasttext.predict(txt2, k=10)[0]
-        lang2 = next(l[-2:] for l in lang2 if l[-2:] in cls.langs_iso_6291)
-        return cls.sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=cls.ISO_6391_to_6392(lang1),lang2=cls.ISO_6391_to_6392(lang2),stat=stat)
+def sim_str_str_multiling(txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
+    #We find out the language of the texts
+    lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
+    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+    lang2 = modelFasttext.predict(txt2, k=10)[0]
+    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
+    return sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
 
 
 # def sim_tokset_str():
