@@ -32,6 +32,13 @@ Depending on the language you are using, you may need to add a file with a list 
 
 And the structure of the file is simply the name of the language (eg: catalan) and one stopword per line. As an example, you can take a look at the [catalan stopwords](./catalan) file.
 
+Also, you may want to use WordNets that are not part of the [OMW](http://compling.hss.ntu.edu.sg/omw/) (the ones included in NLTK) such as [Mongolian WordNet](https://github.com/kbatsuren/monwn). For this, you only have to add the folder cointaining the .tab (if it is .tsv, change extension to .tab) file in the **omw** folder inside your NLTK data folder. Usual path for this is:
+
+```
+/home/user/nltk_data/corpora/omw/
+```
+
+You can find an example of how these folders are structured on [the Mongolian WordNet example](./mon).
 
 ## Some enchancements 🆙
 
