@@ -1,5 +1,6 @@
 import nltk
 from nltk.corpus import wordnet as wn
+from nltk.corpus.reader.wordnet import WordNetCorpusReader
 from nltk.corpus import stopwords  
 import numpy as np
 import pyfreeling
@@ -41,7 +42,7 @@ class Lemmatizer:
     
     def lemmatize(self,text:str):
         #First we remove some special characters
-        text = re.sub("_|\.|,|\"| etc|\(|\)|\||»|«|”|“|‘|’|[a-z-à-úïü]['’]|['’][a-z-à-úïü]"," ",text.lower())
+        text = re.sub("_|\.|:|,|\"| etc|\(|\)|\||»|«|”|“|‘|’|[a-z-à-úïü]['’]|['’][a-z-à-úïü]"," ",text.lower())
         text = re.sub("•","·",text)
         text = re.sub("l.l","l·l",text)
 
@@ -58,33 +59,44 @@ class Lemmatizer:
                 lemmas.append(w.get_lemma())
         
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
-        # print(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
-
-def ISO_6391_to_6392(code: str) -> str:
-    """
-    Converts ISO 639-1 (2 letters) language codes to ISO 639-2 (3 letters)
-    """
-    if code == "da":
-        return "dan"
-    elif code == "en":
-        return "eng"
-    elif code == "es":
-        return "spa"
-    elif code == "it":
-        return "ita"
-    elif code == "mo":
-        return "mon"
-    else:
-        raise ValueError("ISO 639-1 code not known")
 
 def meanList(l:list) -> float:
     if len(l)==0:
         return 0
     return sum(l)/len(l)
 
-def similarity_score(s1, s2, stat = "max"):
+class WordNetSimilarity:
+
+    langs_iso_6291 = set(["ca","da","en","es","it","mn"])
+    
+    modelFasttext = fasttext.load_model('./lid.176.bin')
+
+    @classmethod
+    def ISO_6391_to_6392(self,code: str) -> str:
+        """
+        Converts ISO 639-1 (2 letters) language codes to ISO 639-2 (3 letters)
+        """
+        if code == "ca":
+            return "cat"
+        if code == "da":
+            return "dan"
+        elif code == "en":
+            return "eng"
+        elif code == "es":
+            return "spa"
+        elif code == "it":
+            return "ita"
+        elif code == "mn":
+            return "mon"
+        else:
+            raise ValueError("ISO 639-1 code not known: "+str(code))
+
+    
+
+    @classmethod
+    def similarity_score(cls,s1, s2, stat = "max"):
         """
         Calculate the normalized similarity score of s1 onto s2
 
@@ -105,11 +117,8 @@ def similarity_score(s1, s2, stat = "max"):
             Out: 0.73333333333333339
         """
         
-        if len(s1) == 0 or len(s2)==0:
-            if s1 == s2:
-                return 1
-            else:
-                return 0
+        if len(s1) == 0 or len(s2)==0 or s1==None or s2==None:
+            return 0
         list1 = []
 
         count=0
@@ -126,8 +135,6 @@ def similarity_score(s1, s2, stat = "max"):
                     list2.append(0)
             list1.append(max(list2))
 
-        # print(list1)
-
         if stat == "max":
             output = max(list1)
         elif stat == "mean":
@@ -139,41 +146,44 @@ def similarity_score(s1, s2, stat = "max"):
         else:
             raise ValueError("Stat still not suported")
         return output
+    
+    @classmethod
+    def symetric_similarity_score(cls,s1, s2, stat = "max"):
+        return (cls.similarity_score(s1, s2,stat) + cls.similarity_score(s2, s1,stat)) / 2
 
-def symetric_similarity_score(s1, s2, stat = "max"):
-    return (similarity_score(s1, s2,stat) + similarity_score(s2, s1,stat)) / 2
+    @classmethod
+    def toks_to_synsets(cls,toks, pos = None, lang = "eng"):
+        """
+        Returns a list of synsets in a list of tokens.
 
-def toks_to_synsets(toks, pos = None, lang = "eng"):
-    """
-    Returns a list of synsets in a list of tokens.
+        Tokenizes and tags the words in the document doc.
+        Then finds the first synset for each word/tag combination.
+        If a synset is not found for that combination it is skipped.
 
-    Tokenizes and tags the words in the document doc.
-    Then finds the first synset for each word/tag combination.
-    If a synset is not found for that combination it is skipped.
+        Args:
+            toks: List of tokens to be converted
+            pos: Whether to use PoS info or leave it as None
 
-    Args:
-        toks: List of tokens to be converted
-        pos: Whether to use PoS info or leave it as None
+        Returns:
+            list of synsets
 
-    Returns:
-        list of synsets
+        Example:
+            toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
+            Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
+        """
 
-    Example:
-        toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
-        Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
-    """
+        output = []
+        for i in toks:
+            syn = wn.synsets(i,pos=None,lang=lang)
+            if len(syn)>0:
+                synNames = []
+                for s in syn:
+                    # s = s.name()
+                    output.extend(syn)
+        return output
 
-    output = []
-    for i in toks:
-        syn = wn.synsets(i,pos=None,lang=lang)
-        if len(syn)>0:
-            synNames = []
-            for s in syn:
-                # s = s.name()
-                output.extend(syn)
-    return output
-
-def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
+    @classmethod
+    def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
         """Finds the symmetrical similarity between two lists 
         of lists of tokens (two lists of documents)"""
                 # first function u need to create
@@ -190,26 +200,22 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
 
         return sims
 
+    @classmethod
+    def sim_str_str(cls,txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+        toks1 = cls.toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
+        toks2 = cls.toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
+        return cls.symetric_similarity_score(toks1,toks2,stat=stat)
 
-def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
-    toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
-    toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
-    return symetric_similarity_score(toks1,toks2,stat=stat)
+    
 
-modelFasttext = fasttext.load_model('./lid.176.ftz')
-
-def sim_str_str_multiling(txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
-    #We find out the language of the texts
-    lang1 = modelFasttext.predict(txt1, k=1)[0][0][-2:] #We take the ISO code of the languages
-    lang2 = modelFasttext.predict(txt2, k=1)[0][0][-2:]
-    print(lang1)
-    print(lang2)
-    return sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
+    @classmethod
+    def sim_str_str_multiling(cls,txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
+        #We find out the language of the texts
+        lang1 = cls.modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
+        lang1 = next(l[-2:] for l in lang1 if l[-2:] in cls.langs_iso_6291)
+        lang2 = cls.modelFasttext.predict(txt2, k=10)[0]
+        lang2 = next(l[-2:] for l in lang2 if l[-2:] in cls.langs_iso_6291)
+        return cls.sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=cls.ISO_6391_to_6392(lang1),lang2=cls.ISO_6391_to_6392(lang2),stat=stat)
 
 
 # def sim_tokset_str():
-
-if __name__ == '__main__':
-    # print(sim_str_str("I am testing this new application on my laptop connected to the Internet.","My son studied computer science and he's working at Google",stat="max"))
-    # print(sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.","My son studied computer science and he's working at Google",stat="max"))
-    # print(sim_str_str_multiling("Mi padre irá a comprar jamón y queso a la tienda de la esquina.","My son studied computer science and he's working at Google",stat="max"))

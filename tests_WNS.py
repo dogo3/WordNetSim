@@ -1,10 +1,7 @@
 # import unittest
-# from .WNS import *
+# from WNS import WordNetSimilarity as wns
 
 # class TestWNS(unittest.TestCase):
 
 # # class TestLemmatize(unittest.TestCase):
 
-
-# if __name__ == '__main__':
-#     unittest.main()
