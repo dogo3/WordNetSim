@@ -155,8 +155,7 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
     """
     Returns a list of synsets in a list of tokens.
 
-    Tokenizes and tags the words in the document doc.
-    Then finds the first synset for each word/tag combination.
+    Then finds all the synsets for each word combination.
     If a synset is not found for that combination it is skipped.
 
     Args:
@@ -201,6 +200,25 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
 
 
 def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+    """
+    Finds the symetric similarity score between two texts, aggregating the
+    path similarity of the synsets according the stat argument.
+
+    Parameters
+    ----------
+    txt1: str
+        First of the two texts.
+    txt2: str
+        Second of the two texts.
+    lemmatizer: Lematizer
+        The Lemmatizer used to find the lemmas of the tokens in texts.
+    lang1: str
+        Language of the first text.
+    lang2: str
+        Language of the second text.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+    """
     toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
     toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
     return symetric_similarity_score(toks1,toks2,stat=stat)
