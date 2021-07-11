@@ -5,14 +5,14 @@ Python module implementing a semantic similarity metric via WordNet.
 
 ## Tools and libraries 🛠️
 
-- [**NLTK**](http://nltk.org/): As a WordNet interface.
+- [**NLTK 3.5**](http://nltk.org/): As a WordNet interface.
 - [**FreeLing 4.2**](http://nlp.lsi.upc.edu/freeling/node/1): For tokenizing, sentence splitting and lemmatization. Also needed the **Python API (pyFreeLing)**.
 - [**FastText 0.9.2**](https://fasttext.cc/docs/en/support.html): For language detection.
 - [Numpy 1.19.5](https://www.numpy.org): For basic statistical functions.
 
 ## Setup 👨‍💻
 
-Main dependencies for this module to work are Freeling and NLTK.
+Main dependencies needed for this module to work are related with Freeling, FastText and NLTK.
 
 ### Installing Freeling
 
@@ -41,7 +41,7 @@ Also, you may want to use WordNets that are not part of the [OMW](http://complin
 /home/user/nltk_data/corpora/omw/
 ```
 
-You can find an example of how these folders are structured on [the Mongolian WordNet example](./mon).
+You can find an example of how these folders are structured on [the Mongolian WordNet example](./mon.zip).
 
 ## Some enchancements 🆙
 
