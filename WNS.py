@@ -10,8 +10,6 @@ import fasttext
 
 class Lemmatizer:
 
-    
-
     def __init__(self,
                 DATA="/usr/local/share/freeling/",
                 LANG="en",
@@ -42,8 +40,8 @@ class Lemmatizer:
     
     def lemmatize(self,text:str):
         #First we remove some special characters
-        text = re.sub("_|\.|:|,|\"| etc|\(|\)|\||»|«|”|“|‘|’|[a-z-à-úïü]['’]|['’][a-z-à-úïü]"," ",text.lower())
-        text = re.sub("•","·",text)
+        # text = re.sub("_|\.|:|,|\"| etc|\(|\)|\||»|«|”|“|‘|’|[a-z-à-úïü]['’]|['’][a-z-à-úïü]"," ",text.lower())
+        text = re.sub("•","·",text.lower())
         text = re.sub("l.l","l·l",text)
 
         #Freeling's Splitter needs a EOF mark or it will fail, that's why we put a final dot
@@ -59,6 +57,7 @@ class Lemmatizer:
                 lemmas.append(w.get_lemma())
         
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
+        print(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
@@ -92,7 +91,24 @@ def ISO_6391_to_6392(code: str) -> str:
     else:
         raise ValueError("ISO 639-1 code not known: "+str(code))
 
-
+def ISO_6391_to_name(code: str) -> str:
+    """
+    Converts ISO 639-1 (2 letters) language codes to common name (eg: "en" -> "english")
+    """
+    if code == "ca":
+        return "catalan"
+    if code == "da":
+        return "danish"
+    elif code == "en":
+        return "english"
+    elif code == "es":
+        return "spanish"
+    elif code == "it":
+        return "italian"
+    elif code == "mn":
+        return "mongolian"
+    else:
+        raise ValueError("ISO 639-1 code not known: "+str(code))
 
 
 def similarity_score(s1, s2, stat = "max"):
@@ -173,11 +189,13 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
     output = []
     for i in toks:
         syn = wn.synsets(i,pos=None,lang=lang)
+        syn = syn[0:min(1,len(syn))]
         if len(syn)>0:
             synNames = []
             for s in syn:
                 # s = s.name()
                 output.extend(syn)
+    # print(output)
     return output
 
 
@@ -199,7 +217,7 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
     return sims
 
 
-def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+def sim_str_str(txt1: str, txt2: str, lemmatizer1 = Lemmatizer(),lemmatizer2 = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
     """
     Finds the symetric similarity score between two texts, aggregating the
     path similarity of the synsets according the stat argument.
@@ -210,8 +228,10 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang
         First of the two texts.
     txt2: str
         Second of the two texts.
-    lemmatizer: Lematizer
-        The Lemmatizer used to find the lemmas of the tokens in texts.
+    lemmatizer1: Lematizer
+        The Lemmatizer used to find the lemmas of the tokens in text1.
+    lemmatizer2: Lematizer
+        The Lemmatizer used to find the lemmas of the tokens in text2.
     lang1: str
         Language of the first text.
     lang2: str
@@ -219,20 +239,24 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer = Lemmatizer(),lang1="eng",lang
     stat: str
         Statistical function to aggregate the similarity between lemmas.
     """
-    toks1 = toks_to_synsets(lemmatizer.lemmatize(txt1),lang=lang1)    
-    toks2 = toks_to_synsets(lemmatizer.lemmatize(txt2),lang=lang2)
+    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=lang1)    
+    toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=lang2)
     return symetric_similarity_score(toks1,toks2,stat=stat)
 
 
 
 
-def sim_str_str_multiling(txt1: str, txt2: str, lemmatizer = Lemmatizer(),stat="max") -> float:
+def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
     #We find out the language of the texts
     lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
+    # print(lang1)
     lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+    lemmatizer1 = Lemmatizer(LANG=lang1, LANG_STOPWORDS=ISO_6391_to_name(lang1))
     lang2 = modelFasttext.predict(txt2, k=10)[0]
+    # print(lang2)
     lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
-    return sim_str_str(txt1,txt2,lemmatizer=lemmatizer,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
+    lemmatizer2 = Lemmatizer(LANG=lang2, LANG_STOPWORDS=ISO_6391_to_name(lang2))
+    return sim_str_str(txt1,txt2,lemmatizer1=lemmatizer1,lemmatizer2=lemmatizer2,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
 
 
 # def sim_tokset_str():
