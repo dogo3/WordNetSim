@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 lid.176.bin
+probant.py

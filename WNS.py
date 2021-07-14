@@ -57,7 +57,7 @@ class Lemmatizer:
                 lemmas.append(w.get_lemma())
         
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
-        print(res)
+        # print(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
@@ -233,9 +233,9 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer1 = Lemmatizer(),lemmatizer2 = L
     lemmatizer2: Lematizer
         The Lemmatizer used to find the lemmas of the tokens in text2.
     lang1: str
-        Language of the first text.
+        Language of the first text in ISO 639-2 format.
     lang2: str
-        Language of the second text.
+        Language of the second text in ISO 639-2 format.
     stat: str
         Statistical function to aggregate the similarity between lemmas.
     """
