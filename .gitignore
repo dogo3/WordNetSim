@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 lid.176.bin
 probant.py
+/.project
+/.pydevproject

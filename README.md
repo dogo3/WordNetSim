@@ -3,6 +3,21 @@
 
 Python module implementing a semantic similarity metric via WordNet.
 
+
+## Docker
+
+You can create the docker image with the required dependencies and the code with:
+
+```
+ DOCKER_BUILDKIT=1 docker build -t word_net_sim .  
+```
+
+After that you can run the image with:
+
+```
+docker run -it word_net_sim /bin/bash
+```
+
 ## Tools and libraries 🛠️
 
 - [**NLTK 3.5**](http://nltk.org/): As a WordNet interface.
