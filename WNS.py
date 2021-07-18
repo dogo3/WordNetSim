@@ -6,6 +6,8 @@ import numpy as np
 import pyfreeling
 import re
 import fasttext
+import marshal
+from alive_progress import alive_bar
 
 
 class Lemmatizer:
@@ -71,6 +73,47 @@ langs_iso_6291 = set(["ca","da","en","es","it","mn"])
 
 modelFasttext = fasttext.load_model('./lid.176.bin')
 
+scores = {}
+try:
+    f = open("./scores.marshal","rb")
+    scores = marshal.load(f)
+    f.close()
+except IOError:
+    scores = {}
+print(len(scores))
+
+
+def fill_scores(text: str, lang: str) -> dict:
+    lemmatizer = Lemmatizer(LANG=lang,LANG_STOPWORDS=ISO_6391_to_name(lang))
+    lemmas = lemmatizer.lemmatize(text)
+    lemmas = set(lemmas)
+    lemmas_cp = lemmas.copy()
+    langISO6392 = ISO_6391_to_6392(lang)
+    synsets = []
+    print("Lemmatize")
+    with alive_bar(len(lemmas),force_tty=1) as bar:
+        for l in lemmas:
+            bar()
+            synset = toks_to_synsets([l],lang=langISO6392)
+            if synset == []:
+                lemmas_cp.remove(l)
+            else:
+                synsets.append(synset[0])
+    lemmas = lemmas_cp.copy()
+    new_scores = {}
+    print("Compute similarity")
+    with alive_bar(len(synsets)**2,force_tty=1) as bar:
+        for i,s1 in enumerate(synsets):
+            for j,s2 in enumerate(synsets):
+                bar()
+                if j<i:
+                    continue
+                else:
+                    score = s1.path_similarity(s2)
+                    new_scores[s1.name()+s2.name()] = score
+    foutput = open("./scores.marshal","wb")
+    marshal.dump(new_scores,foutput)
+    foutput.close()
 
 def ISO_6391_to_6392(code: str) -> str:
     """
@@ -141,13 +184,16 @@ def similarity_score(s1, s2, stat = "max"):
     for a in s1:
         list2 = []
         for i in s2:
-            # finds the synset in s2 with the largest similarity value
-            score = i.path_similarity(a)
-            if score is not None:
-                list2.append(score)
+            if a.name()+i.name() in scores:
+                list2.append(scores[a.name()+i.name()])
             else:
-                #If distance cannot be computed it is set to 0
-                list2.append(0)
+                # finds the synset in s2 with the largest similarity value
+                score = i.path_similarity(a)
+                if score is not None:
+                    list2.append(score)
+                else:
+                    #If distance cannot be computed it is set to 0
+                    list2.append(0)
         list1.append(max(list2))
 
     if stat == "max":

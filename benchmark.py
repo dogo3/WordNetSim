@@ -41,6 +41,7 @@ print(sim_str_str("Estoy probando esta nueva aplicación en mi portátil conecta
                     lang1="spa",\
                     lang2="spa",\
                     stat="max"))
+
 print("Time to measure similarity without language inference",time.time() - start_time,"s")
 
 start_time = time.time()

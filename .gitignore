@@ -127,8 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Project specific
 lid.176.bin
 probant.py
 /.project
 /.pydevproject
 probantSpacy.py
+*.marshal
