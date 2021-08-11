@@ -82,9 +82,20 @@ except IOError:
     scores = {}
 print(len(scores))
 
+lemmatizer_en = Lemmatizer(LANG="en",LANG_STOPWORDS="english")
+lemmatizer_es = Lemmatizer(LANG="es",LANG_STOPWORDS="spanish")
+
+def getLemmatizer(lang: str) -> Lemmatizer:
+    if lang=="en":
+        lemmatizer = lemmatizer_en
+    elif lang=="es":
+        lemmatizer = lemmatizer_es
+    else:
+        lemmatizer = Lemmatizer(LANG=lang, LANG_STOPWORDS=ISO_6391_to_name(lang))
+    return lemmatizer
 
 def fill_scores(text: str, lang: str) -> dict:
-    lemmatizer = Lemmatizer(LANG=lang,LANG_STOPWORDS=ISO_6391_to_name(lang))
+    lemmatizer = getLemmatizer(lang)
     lemmas = lemmatizer.lemmatize(text)
     lemmas = set(lemmas)
     lemmas_cp = lemmas.copy()
@@ -263,7 +274,7 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
     return sims
 
 
-def sim_str_str(txt1: str, txt2: str, lemmatizer1 = Lemmatizer(),lemmatizer2 = Lemmatizer(),lang1="eng",lang2="eng",stat="max") -> float:
+def sim_str_str(txt1: str, txt2: str,lang1="eng",lang2="eng",stat="max") -> float:
     """
     Finds the symetric similarity score between two texts, aggregating the
     path similarity of the synsets according the stat argument.
@@ -274,10 +285,6 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer1 = Lemmatizer(),lemmatizer2 = L
         First of the two texts.
     txt2: str
         Second of the two texts.
-    lemmatizer1: Lematizer
-        The Lemmatizer used to find the lemmas of the tokens in text1.
-    lemmatizer2: Lematizer
-        The Lemmatizer used to find the lemmas of the tokens in text2.
     lang1: str
         Language of the first text in ISO 639-2 format.
     lang2: str
@@ -285,24 +292,39 @@ def sim_str_str(txt1: str, txt2: str, lemmatizer1 = Lemmatizer(),lemmatizer2 = L
     stat: str
         Statistical function to aggregate the similarity between lemmas.
     """
-    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=lang1)    
-    toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=lang2)
+    
+    lemmatizer1 = getLemmatizer(lang1)
+    lemmatizer2 = getLemmatizer(lang2)
+    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1))    
+    toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=ISO_6391_to_6392(lang2))
     return symetric_similarity_score(toks1,toks2,stat=stat)
 
 
 
 
 def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
+    """
+    Finds the symetric similarity score between two texts, where each
+    text can be in the different supported languages. Aggregates the
+    path similarity of the synsets according the stat argument.
+
+    Parameters
+    ----------
+    txt1: str
+        First of the two texts.
+    txt2: str
+        Second of the two texts.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+    """
     #We find out the language of the texts
     lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
     # print(lang1)
     lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
-    lemmatizer1 = Lemmatizer(LANG=lang1, LANG_STOPWORDS=ISO_6391_to_name(lang1))
     lang2 = modelFasttext.predict(txt2, k=10)[0]
     # print(lang2)
     lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
-    lemmatizer2 = Lemmatizer(LANG=lang2, LANG_STOPWORDS=ISO_6391_to_name(lang2))
-    return sim_str_str(txt1,txt2,lemmatizer1=lemmatizer1,lemmatizer2=lemmatizer2,lang1=ISO_6391_to_6392(lang1),lang2=ISO_6391_to_6392(lang2),stat=stat)
+    return sim_str_str(txt1,txt2,lang1=lang1,lang2=lang2,stat=stat)
 
 
 # def sim_tokset_str():

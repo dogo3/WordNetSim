@@ -1,7 +1,9 @@
 print("Import time",flush=True)
 import time
 print("Import wns",flush=True)
+start_time = time.time()
 from WNS import Lemmatizer,sim_str_str,sim_str_str_multiling, toks_to_synsets, similarity_score, symetric_similarity_score
+print("Time to import WNS",time.time() - start_time,"s")
 
 #wc quijote.txt = 1876 words
 txt = open("quijote.txt","r").read()
@@ -36,10 +38,23 @@ print("    that is",(end_time - start_time)/(len(toks1)*len(toks1)),"seconds per
 start_time = time.time()
 print(sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
                     "Mi ordenador no funciona.",\
-                    lemmatizer1=lemmatizer,\
-                    lemmatizer2=lemmatizer,\
-                    lang1="spa",\
-                    lang2="spa",\
+                    lang1="es",\
+                    lang2="es",\
+                    stat="max"))
+
+print("Time to measure similarity without language inference",time.time() - start_time,"s")
+
+start_time = time.time()
+print(sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                    "Mi ordenador no funciona.",\
+                    stat="max"))
+print("Time to measure similarity with language inference",time.time() - start_time,"s")
+
+start_time = time.time()
+print(sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                    "Mi ordenador no funciona.",\
+                    lang1="es",\
+                    lang2="es",\
                     stat="max"))
 
 print("Time to measure similarity without language inference",time.time() - start_time,"s")
