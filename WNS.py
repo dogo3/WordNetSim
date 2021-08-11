@@ -316,6 +316,11 @@ def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
         Second of the two texts.
     stat: str
         Statistical function to aggregate the similarity between lemmas.
+    
+    Return
+    ----------
+    The float value of the similarity.
+
     """
     #We find out the language of the texts
     lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
@@ -326,5 +331,36 @@ def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
     lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
     return sim_str_str(txt1,txt2,lang1=lang1,lang2=lang2,stat=stat)
 
+def sim_str_attrlst(txt: str, attrlst: list,lang1="eng",lang2="eng",stat="max") -> list:
+    """
+    Finds the symetric similarity score between a text and a list of attributes
+    defined as pairs <key:value>. It aggregates the path similarity of the synsets 
+    according the stat argument.
 
-# def sim_tokset_str():
+    Parameters
+    ----------
+    txt1: str
+        Text.
+    attrlst: list
+        List of pairs (key,value).
+    lang1: str
+        Language of the text in ISO 639-2 format.
+    lang2: str
+        Language of the pairs in ISO 639-2 format.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+
+    Parameters
+    ----------
+    A list of triplets where for each pair <key,value> in parameter attrlst
+    we have a triplet <key,value,similarity> with the similarity of that pair with
+    the text given in the first parameter.
+
+    """
+
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
+    result = []
+    for i,attr in enumerate(attrlst_str):
+        sim = sim_str_str(txt,attr,lang1=lang1,lang2=lang2,stat=stat)
+        result.append((attrlst[i][0],attrlst[i][1],sim))
+    return result
