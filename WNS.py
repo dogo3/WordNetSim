@@ -185,7 +185,6 @@ def similarity_score(s1, s2, stat = "max"):
         similarity_score(synsets1, synsets2)
         Out: 0.73333333333333339
     """
-    
     if len(s1) == 0 or len(s2)==0 or s1==None or s2==None:
         return 0
     list1 = []
@@ -196,7 +195,11 @@ def similarity_score(s1, s2, stat = "max"):
         list2 = []
         for i in s2:
             if a.name()+i.name() in scores:
-                list2.append(scores[a.name()+i.name()])
+                score = scores[a.name()+i.name()]
+                if score is not None:
+                    list2.append(score)
+                else:
+                    list2.append(0)
             else:
                 # finds the synset in s2 with the largest similarity value
                 score = i.path_similarity(a)
@@ -246,6 +249,8 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
     output = []
     for i in toks:
         syn = wn.synsets(i,pos=None,lang=lang)
+        #5 is the maximum number of synsets taken per lemma, the higher, the better
+        # coverage, however the lower speed.
         syn = syn[0:min(1,len(syn))]
         if len(syn)>0:
             synNames = []
@@ -344,13 +349,45 @@ def sim_str_attrlst(txt: str, attrlst: list,lang1="eng",lang2="eng",stat="max") 
     attrlst: list
         List of pairs (key,value).
     lang1: str
-        Language of the text in ISO 639-2 format.
+        Language of the text in ISO 639-1 format.
     lang2: str
-        Language of the pairs in ISO 639-2 format.
+        Language of the pairs in ISO 639-1 format.
     stat: str
         Statistical function to aggregate the similarity between lemmas.
 
+    Returns
+    ----------
+    A list of triplets where for each pair <key,value> in parameter attrlst
+    we have a triplet <key,value,similarity> with the similarity of that pair with
+    the text given in the first parameter.
+
+    """
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
+    result = []
+    for i,attr in enumerate(attrlst_str):
+        sim = sim_str_str(txt,attr,lang1=lang1,lang2=lang2,stat=stat)
+        result.append((attrlst[i][0],attrlst[i][1],sim))
+    return result
+
+def sim_str_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
+    """
+    Finds the symetric similarity score between a text and a list of attributes
+    defined as pairs <key:value>. 
+    It aggregates the path similarity of the synsets 
+    according the stat argument. 
+    Automatically detects text and attributes languages (but assumes 
+    all attribute pairs have same language)!
+
     Parameters
+    ----------
+    txt1: str
+        Text.
+    attrlst: list
+        List of pairs (key,value).
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+
+    Returns
     ----------
     A list of triplets where for each pair <key,value> in parameter attrlst
     we have a triplet <key,value,similarity> with the similarity of that pair with
@@ -358,9 +395,14 @@ def sim_str_attrlst(txt: str, attrlst: list,lang1="eng",lang2="eng",stat="max") 
 
     """
 
+    #We find out the language of the texts
+    lang1 = modelFasttext.predict(txt, k=10)[0] #We take the ISO code of the languages
+    # print(lang1)
+    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+
+    # Concatenate attributes in a string as: "key1 : value1. key2 : value2."
     attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
-    result = []
-    for i,attr in enumerate(attrlst_str):
-        sim = sim_str_str(txt,attr,lang1=lang1,lang2=lang2,stat=stat)
-        result.append((attrlst[i][0],attrlst[i][1],sim))
-    return result
+    attr_str = ". ".join(attrlst_str)+"."
+    lang2 = modelFasttext.predict(attr_str, k=10)[0]
+    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
+    return sim_str_attrlst(txt,attrlst,lang1=lang1,lang2=lang2,stat=stat)
