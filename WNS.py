@@ -2,6 +2,7 @@ import nltk
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetCorpusReader
 from nltk.corpus import stopwords  
+import jieba #Chinese tokenization
 import numpy as np
 import pyfreeling
 import re
@@ -16,29 +17,31 @@ class Lemmatizer:
                 DATA="/usr/local/share/freeling/",
                 LANG="en",
                 LANG_STOPWORDS="english"):
+        self.LANG = LANG
         self.stop_words = set(stopwords.words(LANG_STOPWORDS))
-        self.DATA = DATA
-        pyfreeling.util_init_locale("default")
-        self.LANG=LANG
-        self.op= pyfreeling.maco_options(LANG)
-        self.op.set_data_files( "",
-                    DATA + "common/punct.dat",
-                    DATA + LANG + "/dicc.src",
-                    DATA + LANG + "/afixos.dat",
-                    "",
-                    DATA + LANG + "/locucions.dat",
-                    DATA + LANG + "/np.dat",
-                    DATA + LANG + "/quantities.dat",
-                    DATA + LANG + "/probabilitats.dat")
+        if LANG == "en" or LANG == "es":
+            self.DATA = DATA
+            pyfreeling.util_init_locale("default")
+            self.LANG=LANG
+            self.op= pyfreeling.maco_options(LANG)
+            self.op.set_data_files( "",
+                        DATA + "common/punct.dat",
+                        DATA + LANG + "/dicc.src",
+                        DATA + LANG + "/afixos.dat",
+                        "",
+                        DATA + LANG + "/locucions.dat",
+                        DATA + LANG + "/np.dat",
+                        DATA + LANG + "/quantities.dat",
+                        DATA + LANG + "/probabilitats.dat")
 
-        self.sp=pyfreeling.splitter(DATA+LANG+"/splitter.dat")
-        self.sid=self.sp.open_session()
-        self.mf=pyfreeling.maco(self.op)
-        # activate mmorpho modules to be used in next call
-        self.mf.set_active_options(umap=False, num=True, pun=True, dat=False,  # select which among created
-                            dic=True, aff=True, comp=False, rtk=True,  # submodules are to be used.
-                            mw=True, ner=True, qt=True, prb=True ); # default: all created submodules are used
-        self.tk=pyfreeling.tokenizer(DATA+LANG+"/tokenizer.dat");
+            self.sp=pyfreeling.splitter(DATA+LANG+"/splitter.dat")
+            self.sid=self.sp.open_session()
+            self.mf=pyfreeling.maco(self.op)
+            # activate mmorpho modules to be used in next call
+            self.mf.set_active_options(umap=False, num=True, pun=True, dat=False,  # select which among created
+                                dic=True, aff=True, comp=False, rtk=True,  # submodules are to be used.
+                                mw=True, ner=True, qt=True, prb=True ); # default: all created submodules are used
+            self.tk=pyfreeling.tokenizer(DATA+LANG+"/tokenizer.dat");
     
     def lemmatize(self,text:str):
         #First we remove some special characters
@@ -46,18 +49,22 @@ class Lemmatizer:
         text = re.sub("•","·",text.lower())
         text = re.sub("l.l","l·l",text)
 
-        #Freeling's Splitter needs a EOF mark or it will fail, that's why we put a final dot
-        if text[-1]!=".":
-                text=text+"."
-        l = self.tk.tokenize(text);
-        ls = self.sp.split(self.sid,l,False);
-        ls = self.mf.analyze(ls)
+        if self.LANG=="zh":
+            lemmas = jieba.cut(text,cut_all=False)
+            lemmas = [str(lemma) for lemma in lemmas]
+        else:
+            #Freeling's Splitter needs a EOF mark or it will fail, that's why we put a final dot
+            if text[-1]!=".":
+                    text=text+"."
+            l = self.tk.tokenize(text);
+            ls = self.sp.split(self.sid,l,False);
+            ls = self.mf.analyze(ls)
 
-        lemmas = []
-        for s in ls:
-            for w in s:
-                lemmas.append(w.get_lemma())
-        
+            lemmas = []
+            for s in ls:
+                for w in s:
+                    lemmas.append(w.get_lemma())
+            
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
         # print(res)
         return res
@@ -69,7 +76,7 @@ def meanList(l:list) -> float:
     return sum(l)/len(l)
 
 
-langs_iso_6291 = set(["ca","da","en","es","it","mn"])
+langs_iso_6291 = set(["en","es","zh","mn"])
 
 modelFasttext = fasttext.load_model('./lid.176.bin')
 
@@ -84,12 +91,15 @@ print(len(scores))
 
 lemmatizer_en = Lemmatizer(LANG="en",LANG_STOPWORDS="english")
 lemmatizer_es = Lemmatizer(LANG="es",LANG_STOPWORDS="spanish")
+lemmatizer_zh = Lemmatizer(LANG="zh",LANG_STOPWORDS="chinese")
 
 def getLemmatizer(lang: str) -> Lemmatizer:
     if lang=="en":
         lemmatizer = lemmatizer_en
     elif lang=="es":
         lemmatizer = lemmatizer_es
+    elif lang=="zh":
+        lemmatizer = lemmatizer_zh
     else:
         lemmatizer = Lemmatizer(LANG=lang, LANG_STOPWORDS=ISO_6391_to_name(lang))
     return lemmatizer
@@ -142,6 +152,8 @@ def ISO_6391_to_6392(code: str) -> str:
         return "ita"
     elif code == "mn":
         return "mon"
+    elif code == "zh":
+        return "cmn"
     else:
         raise ValueError("ISO 639-1 code not known: "+str(code))
 
@@ -161,6 +173,8 @@ def ISO_6391_to_name(code: str) -> str:
         return "italian"
     elif code == "mn":
         return "mongolian"
+    elif code == "zh":
+        return "chinese"
     else:
         raise ValueError("ISO 639-1 code not known: "+str(code))
 
