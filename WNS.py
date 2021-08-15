@@ -3,6 +3,7 @@ from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetCorpusReader
 from nltk.corpus import stopwords  
 import jieba #Chinese tokenization
+import math
 import numpy as np
 import pyfreeling
 import re
@@ -135,6 +136,12 @@ def fill_scores(text: str, lang: str) -> dict:
                     continue
                 else:
                     score = s1.path_similarity(s2)
+                    if score is not None:
+                        score=math.log(4*score,4)**0.5
+                        if isinstance(score,complex) or score==0:
+                            score = 0
+                    else:
+                        score = 0
                     new_scores[frozenset([s1.name(),s2.name()])] = score
     foutput = open("./scores.marshal","wb")
     marshal.dump(new_scores,foutput)
@@ -222,6 +229,9 @@ def similarity_score(s1, s2, stat = "max"):
                 # finds the synset in s2 with the largest similarity value
                 score = i.path_similarity(a)
                 if score is not None:
+                    score=math.log(4*score,4)**0.5
+                    if isinstance(score,complex) or score==0:
+                        score = 0
                     list2.append(score)
                 else:
                     #If distance cannot be computed it is set to 0
