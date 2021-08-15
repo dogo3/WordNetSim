@@ -135,7 +135,7 @@ def fill_scores(text: str, lang: str) -> dict:
                     continue
                 else:
                     score = s1.path_similarity(s2)
-                    new_scores[s1.name()+s2.name()] = score
+                    new_scores[frozenset([s1.name(),s2.name()])] = score
     foutput = open("./scores.marshal","wb")
     marshal.dump(new_scores,foutput)
     foutput.close()
@@ -212,8 +212,8 @@ def similarity_score(s1, s2, stat = "max"):
     for a in s1:
         list2 = []
         for i in s2:
-            if a.name()+i.name() in scores:
-                score = scores[a.name()+i.name()]
+            if frozenset([a.name(),i.name()]) in scores:
+                score = scores[frozenset([a.name(),i.name()])]
                 if score is not None:
                     list2.append(score)
                 else:

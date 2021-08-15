@@ -21,9 +21,11 @@ docker run -it word_net_sim /bin/bash
 ## Tools and libraries 🛠️
 
 - [**NLTK 3.5**](http://nltk.org/): As a WordNet interface.
-- [**FreeLing 4.2**](http://nlp.lsi.upc.edu/freeling/node/1): For tokenizing, sentence splitting and lemmatization. Also needed the **Python API (pyFreeLing)**.
+- [**FreeLing 4.2**](http://nlp.lsi.upc.edu/freeling/node/1): For tokenizing, sentence splitting and lemmatization in English and Spanish. Also needed the **Python API (pyFreeLing)**.
+- [**Jieba 0.42.1**](https://github.com/fxsjy/jieba): For Chinese text segmentation.
 - [**FastText 0.9.2**](https://fasttext.cc/docs/en/support.html): For language detection.
 - [Numpy 1.19.5](https://www.numpy.org): For basic statistical functions.
+
 
 ## Setup 👨‍💻
 
@@ -48,7 +50,7 @@ Depending on the language you are using, you may need to add a file with a list 
 /home/user/nltk_data/corpora/stopwords/
 ```
 
-And the structure of the file is simply the name of the language (eg: catalan) and one stopword per line. As an example, you can take a look at the [catalan stopwords](./catalan) file.
+And the structure of the file is simply the name of the language (eg: chinese) and one stopword per line. As an example, you can take a look at the [chinese stopwords](./chinese) file.
 
 Also, you may want to use WordNets that are not part of the [OMW](http://compling.hss.ntu.edu.sg/omw/) (the ones included in NLTK) such as [Mongolian WordNet](https://github.com/kbatsuren/monwn). For this, you only have to add the folder cointaining the .tab (if it is .tsv, change extension to .tab) file in the **omw** folder inside your NLTK data folder. Usual path for this is:
 
