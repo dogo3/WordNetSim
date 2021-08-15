@@ -135,3 +135,5 @@ probant.py
 /.pydevproject
 probantSpacy.py
 *.marshal
+mongolian/*
+scroll-lang-mn-bundle.git/*
