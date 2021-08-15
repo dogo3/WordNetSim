@@ -60,6 +60,21 @@ Also, you may want to use WordNets that are not part of the [OMW](http://complin
 
 You can find an example of how these folders are structured on [the Mongolian WordNet example](./mon.zip).
 
+## Running ▶️
+
+This project is intended to work be inserted in an **REST API** or a similar mechanism. This means that at the beggining it suffers from a strong overhead while having to load some files, in order than later, when petitions arrive, it's able to answer as fast as possible. All the code is written in the file [**WNS.py**](./WNS.py) and when importing any method of this library is when the **start overhead** will take place.
+
+In the file [**examples.py**](./examples.py) you'll find some **examples** on how to call each method.
+   
+```
+python3 examples.py
+```
+   
+In the file [**benchmark.py**](./benchmark.py) you'll find a benchmark **measuring** how much **time** each method takes in your system. Each method will be executed as many times as the first parameter passed by CLI, in order to average the times and having a more robust evaluation.
+```
+python3 benchmark.py n_iterations
+```
+
 ## Some enchancements 🆙
 
 As you might notice, some of the steps are slow. These are mainly finding the synsets corresponding to each word and computing distance between those. To solve this, the use of memoization techniques, such as precomputing the values and saving them on sets or any other fast-accessing data structure are good solutions, however the idea of this repo was offering the basic features.
