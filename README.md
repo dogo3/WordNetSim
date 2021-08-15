@@ -3,8 +3,14 @@
 
 Python module implementing a semantic similarity metric via WordNet.
 
+Languages currently supported:
 
-## Docker
+| English (en) | Spanish (es) | Chinese (zh) | Mongolian (mn) |
+|--------------|--------------|--------------|----------------|
+| ✅            | ✅            | ✅            | 🔜              |
+
+
+## Docker 🐳
 
 You can create the docker image with the required dependencies and the code with:
 
