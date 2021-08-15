@@ -65,7 +65,28 @@ for i in range(n_iterations):
                         lang2="es",\
                         stat="max")
 
-print("Avg time WNS without language inference",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS without language inference (es)",(time.time() - start_time)/n_iterations,"s")
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("I am testing this new application in a laptop connected to the internet.",
+                        "My laptop is not working.",\
+                        lang1="en",\
+                        lang2="en",\
+                        stat="max")
+
+print("Avg time WNS without language inference (en)",(time.time() - start_time)/n_iterations,"s")
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("我正在一台连接到互联网的笔记本电脑中测试这个新的应用程序。",
+                        "我的笔记本电脑不工作了。",\
+                        lang1="zh",\
+                        lang2="zh",\
+                        stat="max")
+
+print("Avg time WNS without language inference (zh)",(time.time() - start_time)/n_iterations,"s")
+
 
 start_time = time.time()
 for i in range(n_iterations):

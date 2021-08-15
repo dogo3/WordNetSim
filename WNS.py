@@ -42,6 +42,10 @@ class Lemmatizer:
                                 dic=True, aff=True, comp=False, rtk=True,  # submodules are to be used.
                                 mw=True, ner=True, qt=True, prb=True ); # default: all created submodules are used
             self.tk=pyfreeling.tokenizer(DATA+LANG+"/tokenizer.dat");
+        elif LANG=="zh":
+            #Compute a simple sentence to load model
+            lemmas = jieba.cut("你好 世界",cut_all=False)
+            lemmas = [str(lemma) for lemma in lemmas]
     
     def lemmatize(self,text:str):
         #First we remove some special characters
