@@ -11,6 +11,7 @@ import fasttext
 import marshal
 from alive_progress import alive_bar
 
+from icecream import ic
 
 class Lemmatizer:
 
@@ -72,6 +73,7 @@ class Lemmatizer:
             
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
         # print(res)
+        ic(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
@@ -137,7 +139,7 @@ def fill_scores(text: str, lang: str) -> dict:
                 else:
                     score = s1.path_similarity(s2)
                     if score is not None:
-                        score=math.log(4*score,4)**0.5
+                        score=math.log(4*score,4)**0.3
                         if isinstance(score,complex) or score==0:
                             score = 0
                     else:
@@ -229,7 +231,7 @@ def similarity_score(s1, s2, stat = "max"):
                 # finds the synset in s2 with the largest similarity value
                 score = i.path_similarity(a)
                 if score is not None:
-                    score=math.log(4*score,4)**0.5
+                    score=math.log(4*score,4)**0.3
                     if isinstance(score,complex) or score==0:
                         score = 0
                     list2.append(score)
@@ -237,7 +239,7 @@ def similarity_score(s1, s2, stat = "max"):
                     #If distance cannot be computed it is set to 0
                     list2.append(0)
         list1.append(max(list2))
-
+    ic(list1)
     if stat == "max":
         output = max(list1)
     elif stat == "mean":
@@ -277,9 +279,9 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
     output = []
     for i in toks:
         syn = wn.synsets(i,pos=None,lang=lang)
-        #5 is the maximum number of synsets taken per lemma, the higher, the better
+        #3 is the maximum number of synsets taken per lemma, the higher, the better
         # coverage, however the lower speed.
-        syn = syn[0:min(1,len(syn))]
+        syn = syn[0:min(3,len(syn))]
         if len(syn)>0:
             synNames = []
             for s in syn:
@@ -328,8 +330,10 @@ def sim_str_str(txt1: str, txt2: str,lang1="eng",lang2="eng",stat="max") -> floa
     
     lemmatizer1 = getLemmatizer(lang1)
     lemmatizer2 = getLemmatizer(lang2)
-    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1))    
+    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1)) 
     toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=ISO_6391_to_6392(lang2))
+    ic(toks1)
+    ic(toks2)
     return symetric_similarity_score(toks1,toks2,stat=stat)
 
 
