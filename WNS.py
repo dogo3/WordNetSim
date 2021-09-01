@@ -13,7 +13,7 @@ from nltk.corpus.reader.wordnet import WordNetCorpusReader
 import numpy as np
 import pyfreeling
 
-from icecream import ic
+# from icecream import ic
 
 class Lemmatizer:
 
@@ -74,8 +74,7 @@ class Lemmatizer:
                     lemmas.append(w.get_lemma())
             
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
-        # print(res)
-        ic(res)
+        # ic(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
@@ -241,7 +240,7 @@ def similarity_score(s1, s2, stat = "max"):
                     #If distance cannot be computed it is set to 0
                     list2.append(0)
         list1.append(max(list2))
-    ic(list1)
+    # ic(list1)
     if stat == "max":
         output = max(list1)
     elif stat == "mean":
@@ -334,8 +333,8 @@ def sim_str_str(txt1: str, txt2: str,lang1="eng",lang2="eng",stat="max") -> floa
     lemmatizer2 = getLemmatizer(lang2)
     toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1)) 
     toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=ISO_6391_to_6392(lang2))
-    ic(toks1)
-    ic(toks2)
+    # ic(toks1)
+    # ic(toks2)
     return symetric_similarity_score(toks1,toks2,stat=stat)
 
 
