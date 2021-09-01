@@ -1,15 +1,17 @@
+import marshal
+import math
+import os
+import re
+
+from alive_progress import alive_bar
+import fasttext
+import jieba  # Chinese tokenization
 import nltk
+from nltk.corpus import stopwords  
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetCorpusReader
-from nltk.corpus import stopwords  
-import jieba #Chinese tokenization
-import math
 import numpy as np
 import pyfreeling
-import re
-import fasttext
-import marshal
-from alive_progress import alive_bar
 
 
 class Lemmatizer:
@@ -83,11 +85,11 @@ def meanList(l:list) -> float:
 
 langs_iso_6291 = set(["en","es","zh","mn"])
 
-modelFasttext = fasttext.load_model('./lid.176.bin')
+modelFasttext = fasttext.load_model(os.getenv('FASTTEXT_PRETRAINED_MODEL_PATH','./lid.176.bin'))
 
 scores = {}
 try:
-    f = open("./scores.marshal","rb")
+    f = open(os.getenv('SCORES_MARSHAL_PATH',"./scores.marshal"),"rb")
     scores = marshal.load(f)
     f.close()
 except IOError:
