@@ -13,7 +13,7 @@ from nltk.corpus.reader.wordnet import WordNetCorpusReader
 import numpy as np
 import pyfreeling
 
-# from icecream import ic
+from icecream import ic
 
 class Lemmatizer:
 
@@ -74,7 +74,6 @@ class Lemmatizer:
                     lemmas.append(w.get_lemma())
             
         res = [l for l in lemmas if ((l!=".") and (l not in self.stop_words))] 
-        # ic(res)
         return res
         # return  [l for l in lemmas if ((l!=".") and (l not in stop_words))] 
 
@@ -240,7 +239,6 @@ def similarity_score(s1, s2, stat = "max"):
                     #If distance cannot be computed it is set to 0
                     list2.append(0)
         list1.append(max(list2))
-    # ic(list1)
     if stat == "max":
         output = max(list1)
     elif stat == "mean":
@@ -276,7 +274,8 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
         toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
         Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
     """
-
+    print(lang)
+    print(toks)
     output = []
     for i in toks:
         syn = wn.synsets(i,pos=None,lang=lang)
@@ -292,12 +291,38 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
     return output
 
 
-def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
+def tokLists_to_synsets(tokLists, pos = None, lang="eng"):
+        """
+        Returns a list of synsets in a list of lists of tokens.
+
+        Tokenizes and tags the words in the document doc.
+        Then finds the first synset for each word/tag combination.
+        If a synset is not found for that combination it is skipped.
+
+        Args:
+            toks: List of tokens to be converted
+            pos: Whether to use PoS info or leave it as None
+
+        Returns:
+            list of synsets
+
+        Example:
+            toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
+            Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
+        """
+        output = []
+        for toks in tokLists:
+            res = toks_to_synsets(toks,lang=lang)
+            output.append(res)
+        return output
+
+def tokLists_path_similarity(tokLists1, tokLists2, lang1="eng", lang2="eng", stat="max"):
     """Finds the symmetrical similarity between two lists 
     of lists of tokens (two lists of documents)"""
             # first function u need to create
-    synsetsLists1 = self.tokLists_to_synsets(tokLists1)
-    synsetsLists2 = self.tokLists_to_synsets(tokLists2)
+    synsetsLists1 = tokLists_to_synsets(tokLists1,lang=lang1)
+    synsetsLists2 = tokLists_to_synsets(tokLists2,lang=lang2)
+
             # 2nd function u need to create
 
     with alive_bar(len(synsetsLists1)*len(synsetsLists2),force_tty=1) as bar:
@@ -305,137 +330,11 @@ def tokLists_path_similarity(self,tokLists1, tokLists2, stat="max"):
         for s1 in range(len(synsetsLists1)):
             for s2 in range(len(synsetsLists2)):
                 bar()
-                sims[s1,s2] = (self.similarity_score(synsetsLists1[s1], synsetsLists2[s2],stat) + self.similarity_score(synsetsLists2[s2], synsetsLists1[s1],stat)) / 2
-
-    return sims
-
-
-def sim_str_str(txt1: str, txt2: str,lang1="eng",lang2="eng",stat="max") -> float:
-    """
-    Finds the symetric similarity score between two texts, aggregating the
-    path similarity of the synsets according the stat argument.
-
-    Parameters
-    ----------
-    txt1: str
-        First of the two texts.
-    txt2: str
-        Second of the two texts.
-    lang1: str
-        Language of the first text in ISO 639-2 format.
-    lang2: str
-        Language of the second text in ISO 639-2 format.
-    stat: str
-        Statistical function to aggregate the similarity between lemmas.
-    """
-    
-    lemmatizer1 = getLemmatizer(lang1)
-    lemmatizer2 = getLemmatizer(lang2)
-    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1)) 
-    toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=ISO_6391_to_6392(lang2))
-    # ic(toks1)
-    # ic(toks2)
-    return symetric_similarity_score(toks1,toks2,stat=stat)
+                sims[s1,s2] = (similarity_scAdd)
+    max_cols = np.max(sim,axis=0)
+    max_rows = np.max(sim,axis=1)
+    return np.mean(np.concatenate((max_cols,max_rows)))*100
 
 
 
-
-def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
-    """
-    Finds the symetric similarity score between two texts, where each
-    text can be in the different supported languages. Aggregates the
-    path similarity of the synsets according the stat argument.
-
-    Parameters
-    ----------
-    txt1: str
-        First of the two texts.
-    txt2: str
-        Second of the two texts.
-    stat: str
-        Statistical function to aggregate the similarity between lemmas.
-    
-    Return
-    ----------
-    The float value of the similarity.
-
-    """
-    #We find out the language of the texts
-    lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
-    # print(lang1)
-    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
-    lang2 = modelFasttext.predict(txt2, k=10)[0]
-    # print(lang2)
-    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
-    return sim_str_str(txt1,txt2,lang1=lang1,lang2=lang2,stat=stat)
-
-def sim_str_attrlst(txt: str, attrlst: list,lang1="eng",lang2="eng",stat="max") -> list:
-    """
-    Finds the symetric similarity score between a text and a list of attributes
-    defined as pairs <key:value>. It aggregates the path similarity of the synsets 
-    according the stat argument.
-
-    Parameters
-    ----------
-    txt1: str
-        Text.
-    attrlst: list
-        List of pairs (key,value).
-    lang1: str
-        Language of the text in ISO 639-1 format.
-    lang2: str
-        Language of the pairs in ISO 639-1 format.
-    stat: str
-        Statistical function to aggregate the similarity between lemmas.
-
-    Returns
-    ----------
-    A list of triplets where for each pair <key,value> in parameter attrlst
-    we have a triplet <key,value,similarity> with the similarity of that pair with
-    the text given in the first parameter.
-
-    """
-    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
-    result = []
-    for i,attr in enumerate(attrlst_str):
-        sim = sim_str_str(txt,attr,lang1=lang1,lang2=lang2,stat=stat)
-        result.append((attrlst[i][0],attrlst[i][1],sim))
-    return result
-
-def sim_str_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
-    """
-    Finds the symetric similarity score between a text and a list of attributes
-    defined as pairs <key:value>. 
-    It aggregates the path similarity of the synsets 
-    according the stat argument. 
-    Automatically detects text and attributes languages (but assumes 
-    all attribute pairs have same language)!
-
-    Parameters
-    ----------
-    txt1: str
-        Text.
-    attrlst: list
-        List of pairs (key,value).
-    stat: str
-        Statistical function to aggregate the similarity between lemmas.
-
-    Returns
-    ----------
-    A list of triplets where for each pair <key,value> in parameter attrlst
-    we have a triplet <key,value,similarity> with the similarity of that pair with
-    the text given in the first parameter.
-
-    """
-
-    #We find out the language of the texts
-    lang1 = modelFasttext.predict(txt, k=10)[0] #We take the ISO code of the languages
-    # print(lang1)
-    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
-
-    # Concatenate attributes in a string as: "key1 : value1. key2 : value2."
-    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
-    attr_str = ". ".join(attrlst_str)+"."
-    lang2 = modelFasttext.predict(attr_str, k=10)[0]
-    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
-    return sim_str_attrlst(txt,attrlst,lang1=lang1,lang2=lang2,stat=stat)
+# def sim_attrlst_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
