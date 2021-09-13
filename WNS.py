@@ -492,10 +492,9 @@ def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",s
     lemmas1 = [lemmatizer1.lemmatize(txt) for txt in attrlst1_str]
     lemmas2 = [lemmatizer2.lemmatize(txt) for txt in attrlst2_str]
     sim = tokLists_path_similarity(lemmas1,lemmas2,ISO_6391_to_6392(lang1),ISO_6391_to_6392(lang2),stat)
-    print(sim)
     max_cols = np.max(sim,axis=0)
     max_rows = np.max(sim,axis=1)
-    return np.mean(np.concatenate((max_cols,max_rows)))*100
+    return np.mean(np.concatenate((max_cols,max_rows)))
 
 
 
@@ -528,4 +527,6 @@ def sim_attrlst_attrlst_multiling(attrlst1: list, attrlst2: list,stat="max") -> 
     lang2 = modelFasttext.predict(attr_str, k=10)[0]
     lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
     
-    return sim_attrlst_attrlst(attrlst1,attrlst2,lang1,lang2,stat)
+    sim=sim_attrlst_attrlst(attrlst1,attrlst2,lang1,lang2,stat)
+    print(sim)
+    return(sim)
