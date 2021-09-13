@@ -330,7 +330,171 @@ def tokLists_path_similarity(tokLists1, tokLists2, lang1="eng", lang2="eng", sta
         for s1 in range(len(synsetsLists1)):
             for s2 in range(len(synsetsLists2)):
                 bar()
-                sims[s1,s2] = (similarity_scAdd)
+                sims[s1,s2] = (similarity_score(synsetsLists1[s1], synsetsLists2[s2],stat) + similarity_score(synsetsLists2[s2], synsetsLists1[s1],stat)) / 2
+
+    return sims
+
+
+def sim_str_str(txt1: str, txt2: str,lang1="eng",lang2="eng",stat="max") -> float:
+    """
+    Finds the symetric similarity score between two texts, aggregating the
+    path similarity of the synsets according the stat argument.
+
+    Parameters
+    ----------
+    txt1: str
+        First of the two texts.
+    txt2: str
+        Second of the two texts.
+    lang1: str
+        Language of the first text in ISO 639-2 format.
+    lang2: str
+        Language of the second text in ISO 639-2 format.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+    """
+    
+    lemmatizer1 = getLemmatizer(lang1)
+    lemmatizer2 = getLemmatizer(lang2)
+    toks1 = toks_to_synsets(lemmatizer1.lemmatize(txt1),lang=ISO_6391_to_6392(lang1)) 
+    toks2 = toks_to_synsets(lemmatizer2.lemmatize(txt2),lang=ISO_6391_to_6392(lang2))
+    return symetric_similarity_score(toks1,toks2,stat=stat)
+
+
+
+
+def sim_str_str_multiling(txt1: str, txt2: str,stat="max") -> float:
+    """
+    Finds the symetric similarity score between two texts, where each
+    text can be in the different supported languages. Aggregates the
+    path similarity of the synsets according the stat argument.
+
+    Parameters
+    ----------
+    txt1: str
+        First of the two texts.
+    txt2: str
+        Second of the two texts.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+    
+    Return
+    ----------
+    The float value of the similarity.
+
+    """
+    #We find out the language of the texts
+    lang1 = modelFasttext.predict(txt1, k=10)[0] #We take the ISO code of the languages
+    # print(lang1)
+    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+    lang2 = modelFasttext.predict(txt2, k=10)[0]
+    # print(lang2)
+    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
+    return sim_str_str(txt1,txt2,lang1=lang1,lang2=lang2,stat=stat)
+
+def sim_str_attrlst(txt: str, attrlst: list,lang1="eng",lang2="eng",stat="max") -> list:
+    """
+    Finds the symetric similarity score between a text and a list of attributes
+    defined as pairs <key:value>. It aggregates the path similarity of the synsets 
+    according the stat argument.
+
+    Parameters
+    ----------
+    txt1: str
+        Text.
+    attrlst: list
+        List of pairs (key,value).
+    lang1: str
+        Language of the text in ISO 639-1 format.
+    lang2: str
+        Language of the pairs in ISO 639-1 format.
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+
+    Returns
+    ----------
+    A list of triplets where for each pair <key,value> in parameter attrlst
+    we have a triplet <key,value,similarity> with the similarity of that pair with
+    the text given in the first parameter.
+
+    """
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
+    result = []
+    for i,attr in enumerate(attrlst_str):
+        sim = sim_str_str(txt,attr,lang1=lang1,lang2=lang2,stat=stat)
+        result.append((attrlst[i][0],attrlst[i][1],sim))
+    return result
+
+def sim_str_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
+    """
+    Finds the symetric similarity score between a text and a list of attributes
+    defined as pairs <key:value>. 
+    It aggregates the path similarity of the synsets 
+    according the stat argument. 
+    Automatically detects text and attributes languages (but assumes 
+    all attribute pairs have same language)!
+
+    Parameters
+    ----------
+    txt1: str
+        Text.
+    attrlst: list
+        List of pairs (key,value).
+    stat: str
+        Statistical function to aggregate the similarity between lemmas.
+
+    Returns
+    ----------
+    A list of triplets where for each pair <key,value> in parameter attrlst
+    we have a triplet <key,value,similarity> with the similarity of that pair with
+    the text given in the first parameter.
+
+    """
+
+    #We find out the language of the texts
+    lang1 = modelFasttext.predict(txt, k=10)[0] #We take the ISO code of the languages
+    # print(lang1)
+    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+
+    # Concatenate attributes in a string as: "key1 : value1. key2 : value2."
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst]
+    attr_str = ". ".join(attrlst_str)+"."
+    lang2 = modelFasttext.predict(attr_str, k=10)[0]
+    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
+    return sim_str_attrlst(txt,attrlst,lang1=lang1,lang2=lang2,stat=stat)
+
+def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",stat="max") -> list:
+    """
+    Computes similarity between two profiles, defined as list of pairs (tuples <key,value>) 
+    and understood as two sets of attributes.
+
+    Parameters
+    ----------
+    attrlst1 : list
+        List of attributes (tuples <key,value>) of the first profile.
+    attrlst2 : list
+        List of attributes (tuples <key,value>) of the second profile.
+    lang1 : str, optional
+        Language of the first list, by default "eng".
+    lang2 : str, optional
+        Language of the second list, by default "eng",
+    stat : str, optional
+        Statistical function to aggregate the similarity between lemmas, by default "max".
+
+    Returns
+    -------
+    list
+        A decimal value between 0.0 and 1.0 representing the affinity between both profiles.
+    """
+    attrlst1_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst1]
+    attrlst2_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst2]
+
+    lemmatizer1 = getLemmatizer(lang1)
+    lemmatizer2 = getLemmatizer(lang2)
+    lemmas1 = [lemmatizer1.lemmatize(txt) for txt in attrlst1_str]
+    lemmas2 = [lemmatizer2.lemmatize(txt) for txt in attrlst2_str]
+    sim = tokLists_path_similarity(lemmas1,lemmas2,ISO_6391_to_6392(lang1),ISO_6391_to_6392(lang2),stat)
+    # print(sim)
     max_cols = np.max(sim,axis=0)
     max_rows = np.max(sim,axis=1)
     return np.mean(np.concatenate((max_cols,max_rows)))*100
