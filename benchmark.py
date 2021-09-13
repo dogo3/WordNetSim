@@ -13,7 +13,7 @@ import sys
 import time
 print("Importing wns",flush=True)
 start_time = time.time()
-from WNS import Lemmatizer,sim_str_str,sim_str_str_multiling, toks_to_synsets, similarity_score, symetric_similarity_score, sim_str_attrlst,sim_str_attrlst_multiling,sim_attrlst_attrlst
+from WNS import Lemmatizer,sim_str_str,sim_str_str_multiling, toks_to_synsets, similarity_score, symetric_similarity_score, sim_str_attrlst,sim_str_attrlst_multiling,sim_attrlst_attrlst, sim_attrlst_attrlst_multiling
 print("Time to import WNS",time.time() - start_time,"s")
 
 n_iterations = 1
@@ -57,84 +57,90 @@ print("Time to measure similarity",(end_time - start_time)/n_iterations,"s")
 print("    that is",((end_time - start_time)/n_iterations)/(len(toks1)*len(toks1)),"seconds per pair of synsets.")
 
 # Measuring API methods
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
-#                         "Mi ordenador no funciona.",\
-#                         lang1="es",\
-#                         lang2="es",\
-#                         stat="max")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                        "Mi ordenador no funciona.",\
+                        lang1="es",\
+                        lang2="es",\
+                        stat="max")
 
-# print("Avg time WNS without language inference (es)",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS without language inference (es)",(time.time() - start_time)/n_iterations,"s")
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str("I am testing this new application in a laptop connected to the internet.",
-#                         "My laptop is not working.",\
-#                         lang1="en",\
-#                         lang2="en",\
-#                         stat="max")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("I am testing this new application in a laptop connected to the internet.",
+                        "My laptop is not working.",\
+                        lang1="en",\
+                        lang2="en",\
+                        stat="max")
 
-# print("Avg time WNS without language inference (en)",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS without language inference (en)",(time.time() - start_time)/n_iterations,"s")
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str("我正在一台连接到互联网的笔记本电脑中测试这个新的应用程序。",
-#                         "我的笔记本电脑不工作了。",\
-#                         lang1="zh",\
-#                         lang2="zh",\
-#                         stat="max")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("我正在一台连接到互联网的笔记本电脑中测试这个新的应用程序。",
+                        "我的笔记本电脑不工作了。",\
+                        lang1="zh",\
+                        lang2="zh",\
+                        stat="max")
 
-# print("Avg time WNS without language inference (zh)",(time.time() - start_time)/n_iterations,"s")
-
-
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
-#                         "Mi ordenador no funciona.",\
-#                         stat="max")
-# print("Avg time WNS with language inference",(time.time() - start_time)/n_iterations,"s")
-
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
-#                         "Mi ordenador no funciona.",\
-#                         lang1="es",\
-#                         lang2="es",\
-#                         stat="max")
-
-# print("Avg time WNS without language inference",(time.time() - start_time)/n_iterations,"s")
-
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
-#                         "Mi ordenador no funciona.",\
-#                         stat="max")
-# print("Avg time WNS with language inference",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS without language inference (zh)",(time.time() - start_time)/n_iterations,"s")
 
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_attrlst("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("profesión","programador aplicaciones")],lang1="es",lang2="es",stat="max")
-# print("Avg time WNS between attribute list (1) and text without language inference",(time.time() - start_time)/n_iterations,"s")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                        "Mi ordenador no funciona.",\
+                        stat="max")
+print("Avg time WNS with language inference",(time.time() - start_time)/n_iterations,"s")
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_attrlst("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("profesión","programador aplicaciones"),("vehículo","coche"),("afición","escalada"),("estudios superiores","ingeniería informática")],lang1="es",lang2="es",stat="max")
-# print("Avg time WNS between attribute list (4) and text without language inference",(time.time() - start_time)/n_iterations,"s")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                        "Mi ordenador no funciona.",\
+                        lang1="es",\
+                        lang2="es",\
+                        stat="max")
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_attrlst_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("work","applications programmer")],stat="max")
-# print("Avg time WNS between attribute list (1) and text with language inference",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS without language inference",(time.time() - start_time)/n_iterations,"s")
 
-# start_time = time.time()
-# for i in range(n_iterations):
-#     sim_str_attrlst_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("work","applications programmer"),("vehicle","car"),("hobby","climbing"),("superior studies","computer science")],stat="max")
-# print("Avg time WNS between attribute list (4) and text with language inference",(time.time() - start_time)/n_iterations,"s")
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_str_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",
+                        "Mi ordenador no funciona.",\
+                        stat="max")
+print("Avg time WNS with language inference",(time.time() - start_time)/n_iterations,"s")
+
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_attrlst("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("profesión","programador aplicaciones")],lang1="es",lang2="es",stat="max")
+print("Avg time WNS between attribute list (1) and text without language inference",(time.time() - start_time)/n_iterations,"s")
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_attrlst("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("profesión","programador aplicaciones"),("vehículo","coche"),("afición","escalada"),("estudios superiores","ingeniería informática")],lang1="es",lang2="es",stat="max")
+print("Avg time WNS between attribute list (4) and text without language inference",(time.time() - start_time)/n_iterations,"s")
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_attrlst_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("work","applications programmer")],stat="max")
+print("Avg time WNS between attribute list (1) and text with language inference",(time.time() - start_time)/n_iterations,"s")
+
+start_time = time.time()
+for i in range(n_iterations):
+    sim_str_attrlst_multiling("Estoy probando esta nueva aplicación en mi portátil conectado a internet.",[("work","applications programmer"),("vehicle","car"),("hobby","climbing"),("superior studies","computer science")],stat="max")
+print("Avg time WNS between attribute list (4) and text with language inference",(time.time() - start_time)/n_iterations,"s")
 
 sim_attrlst_attrlst
 start_time = time.time()
 for i in range(n_iterations):
     sim_attrlst_attrlst([("empleo","programador de aplicaciones"),("vehículo","motocicleta")],[("work","applications programmer"),("vehicle","car"),("hobby","climbing"),("superior studies","computer science")],lang1="es",lang2="en",stat="max")
-print("Avg time WNS between two attribute lists (2) and (4) ",(time.time() - start_time)/n_iterations,"s")
+print("Avg time WNS between two attribute lists (2) and (4) without language inference",(time.time() - start_time)/n_iterations,"s")
+
+sim_attrlst_attrlst
+start_time = time.time()
+for i in range(n_iterations):
+    sim_attrlst_attrlst_multiling([("empleo","programador de aplicaciones"),("vehículo","motocicleta")],[("work","applications programmer"),("vehicle","car"),("hobby","climbing"),("superior studies","computer science")],stat="max")
+print("Avg time WNS between two attribute lists (2) and (4) with language inference",(time.time() - start_time)/n_iterations,"s")

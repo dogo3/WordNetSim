@@ -274,8 +274,6 @@ def toks_to_synsets(toks, pos = None, lang = "eng"):
         toks_to_synsets(['Fish', 'are', 'nvqjp', 'friends'])
         Out: [Synset('fish.n.01'), Synset('be.v.01'), Synset('friend.n.01')]
     """
-    print(lang)
-    print(toks)
     output = []
     for i in toks:
         syn = wn.synsets(i,pos=None,lang=lang)
@@ -463,7 +461,7 @@ def sim_str_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
     lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
     return sim_str_attrlst(txt,attrlst,lang1=lang1,lang2=lang2,stat=stat)
 
-def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",stat="max") -> list:
+def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",stat="max") -> float:
     """
     Computes similarity between two profiles, defined as list of pairs (tuples <key,value>) 
     and understood as two sets of attributes.
@@ -483,7 +481,7 @@ def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",s
 
     Returns
     -------
-    list
+    float
         A decimal value between 0.0 and 1.0 representing the affinity between both profiles.
     """
     attrlst1_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst1]
@@ -494,11 +492,40 @@ def sim_attrlst_attrlst(attrlst1: list, attrlst2: list,lang1="eng",lang2="eng",s
     lemmas1 = [lemmatizer1.lemmatize(txt) for txt in attrlst1_str]
     lemmas2 = [lemmatizer2.lemmatize(txt) for txt in attrlst2_str]
     sim = tokLists_path_similarity(lemmas1,lemmas2,ISO_6391_to_6392(lang1),ISO_6391_to_6392(lang2),stat)
-    # print(sim)
+    print(sim)
     max_cols = np.max(sim,axis=0)
     max_rows = np.max(sim,axis=1)
     return np.mean(np.concatenate((max_cols,max_rows)))*100
 
 
 
-# def sim_attrlst_attrlst_multiling(txt: str, attrlst: list,stat="max") -> list:
+def sim_attrlst_attrlst_multiling(attrlst1: list, attrlst2: list,stat="max") -> float:
+    """
+    Same as sim_attrlst_attrlst but with language inference.
+
+    Parameters
+    ----------
+    attrlst1 : list
+        First profile.
+    attrlst2 : list
+        Second profile.
+    stat : str, optional
+        Statistical function to aggregate the similarity between lemmas, by default "max".
+
+    Returns
+    -------
+    float
+        A decimal value between 0.0 and 1.0 representing the affinity between both profiles.
+    """
+
+    # Concatenate attributes in a string as: "key1 : value1. key2 : value2."
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst1]
+    attr_str = ". ".join(attrlst_str)+"."
+    lang1 = modelFasttext.predict(attr_str, k=10)[0]
+    lang1 = next(l[-2:] for l in lang1 if l[-2:] in langs_iso_6291)
+    attrlst_str = [str(attr[0])+" : "+str(attr[1]) for attr in attrlst2]
+    attr_str = ". ".join(attrlst_str)+"."
+    lang2 = modelFasttext.predict(attr_str, k=10)[0]
+    lang2 = next(l[-2:] for l in lang2 if l[-2:] in langs_iso_6291)
+    
+    return sim_attrlst_attrlst(attrlst1,attrlst2,lang1,lang2,stat)
